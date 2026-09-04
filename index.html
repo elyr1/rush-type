@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rush Type — WebGL1</title>
+  <style>
+    :root {
+      --font-neue-montreal: Arial, Helvetica, sans-serif;
+      --page: #050505;
+      --surface: #0c0c0c;
+      --surface-raised: #111;
+      --line: #292929;
+      --line-strong: #424242;
+      --text: #f5f5f2;
+      --accent: #dfff64;
+      --danger: #ff8d8d;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--page);
+      color: var(--text);
+      font-family: var(--font-neue-montreal);
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100svh;
+      padding: clamp(20px, 4vw, 52px);
+    }
+
+    button,
+    textarea {
+      font: inherit;
+    }
+
+    .rush-app {
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      display: grid;
+      gap: clamp(20px, 3vw, 32px);
+    }
+
+    .rush-controls {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      padding: clamp(16px, 2.5vw, 24px);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: 0 18px 60px rgb(0 0 0 / 28%);
+    }
+
+    .rush-field {
+      min-width: 0;
+    }
+
+    .rush-field__label {
+      display: block;
+      margin-bottom: 9px;
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    #rush-input {
+      display: block;
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      padding: 13px 15px;
+      color: var(--text);
+      caret-color: var(--accent);
+      background: var(--surface-raised);
+      border: 1px solid var(--line-strong);
+      border-radius: 11px;
+      outline: none;
+      line-height: 1.5;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    #rush-input:hover {
+      border-color: #5a5a5a;
+    }
+
+    #rush-input:focus-visible {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgb(223 255 100 / 15%);
+    }
+
+    #rush-input[aria-invalid="true"] {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgb(255 141 141 / 12%);
+    }
+
+    #rush-input:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+    }
+
+    .rush-field__meta {
+      margin-top: 8px;
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
+
+    #rush-status {
+      margin: 0;
+      min-height: 1.45em;
+      color: #c7c7c2;
+    }
+
+    #rush-status[data-state="error"] {
+      color: var(--danger);
+    }
+
+    .rush-actions {
+      padding-bottom: 27px;
+    }
+
+    #rush-submit {
+      min-width: 132px;
+      min-height: 48px;
+      padding: 0 22px;
+      color: #101108;
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.86rem;
+      font-weight: 800;
+      letter-spacing: 0.025em;
+      transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+    }
+
+    #rush-submit:hover {
+      background: #ebff9f;
+      box-shadow: 0 8px 28px rgb(223 255 100 / 18%);
+      transform: translateY(-1px);
+    }
+
+    #rush-submit:active {
+      transform: translateY(0);
+    }
+
+    #rush-submit:focus-visible {
+      outline: 3px solid rgb(223 255 100 / 38%);
+      outline-offset: 3px;
+    }
+
+    #rush-submit:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      box-shadow: none;
+      transform: none;
+    }
+
+    #rush-type {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1344 / 820;
+      overflow: hidden;
+      isolation: isolate;
+      background: #000;
+      border: 1px solid #1c1c1c;
+      border-radius: 16px;
+      box-shadow: 0 24px 90px rgb(0 0 0 / 48%);
+      cursor: pointer;
+      user-select: none;
+      touch-action: pan-y;
+    }
+
+    #rush-type[data-failed="true"]::after {
+      content: "WebGL is unavailable in this browser.";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    #rush-type[data-failed="true"] {
+      cursor: default;
+    }
+
+    #rush-type:focus-visible {
+      outline: 3px solid var(--accent);
+      outline-offset: 4px;
+    }
+
+    @media (max-width: 680px) {
+      .rush-controls {
+        grid-template-columns: 1fr;
+      }
+
+      .rush-actions {
+        padding-bottom: 0;
+      }
+
+      #rush-submit {
+        width: 100%;
+      }
+
+      #rush-type {
+        border-radius: 12px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #rush-submit,
+      #rush-input {
+        transition: none;
+      }
+
+      #rush-submit:hover {
+        transform: none;
+      }
+
+      #rush-type { cursor: default; }
+    }
+  </style>
+</head>
+<body>
+  <main class="rush-app">
+    <form id="rush-form" class="rush-controls" novalidate>
+      <div class="rush-field">
+        <label class="rush-field__label" for="rush-input">Text to play</label>
+        <textarea
+          id="rush-input"
+          name="text"
+          rows="3"
+          required
+          spellcheck="true"
+          aria-describedby="rush-status"
+        >gone before you look</textarea>
+        <div class="rush-field__meta">
+          <p id="rush-status" role="status" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </div>
+      <div class="rush-actions">
+        <button id="rush-submit" type="submit">Submit</button>
+      </div>
+    </form>
+
+    <div
+      id="rush-type"
+      role="img"
+      tabindex="0"
+      aria-label="Words animated one at a time on a dark field."
+    ></div>
+  </main>
+  <script type="module" src="./dist/main.js"></script>
+</body>
+</html>
